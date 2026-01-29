@@ -1,16 +1,8 @@
 Pillow
-PyPDF2
 config
-datetime
 gdshortener
-handlers
 hijri_converter
-keyboards
 pytz
-random
 requests
-telebot
-threading
-utils
+pyTelegramBotAPI
 yt_dlp
-zipfile
