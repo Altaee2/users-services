@@ -1,4 +1,4 @@
-PIL
+Pillow
 PyPDF2
 config
 datetime
