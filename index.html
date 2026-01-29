@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوت الخدمات الشامل | V2.5.0</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+         :root {
+            --primary-color: #0088cc;
+            --secondary-color: #1c1c1c;
+            --accent-color: #00d2ff;
+            --text-color: #ffffff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        body {
+            background-color: #0f0f0f;
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+        /* الهيدر */
+        
+        header {
+            height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .hero-title {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--accent-color);
+            text-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+        }
+        
+        .hero-title1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: gold;
+            text-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .btn-tg {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-tg:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px var(--primary-color);
+        }
+        /* قسم المميزات */
+        
+        .features {
+            padding: 80px 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: auto;
+        }
+        
+        .feature-card {
+            background: var(--secondary-color);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            transition: 0.3s;
+            border: 1px solid #333;
+        }
+        
+        .feature-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-10px);
+        }
+        
+        .feature-card i {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+        }
+        /* الإحصائيات */
+        
+        .stats {
+            background: #151515;
+            padding: 50px 20px;
+            text-align: center;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .stat-item h2 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+        }
+        /* الفوتر */
+        
+        footer {
+            padding: 40px;
+            text-align: center;
+            background: #000;
+            border-top: 1px solid #222;
+        }
+        
+        .dev-link {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+        /* أنيميشن */
+        
+        [data-aos] {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: 1s;
+        }
+        
+        .aos-animate {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1 class="hero-title">بوت الخدمات الشامل V2.5.0</h1>
+        <h1 class="hero-title1">All-in-one service bot</h1>
+        <p class="hero-subtitle">المنصة الأذكى على تيليجرام لتنظيم وقتك، إدارة ملفاتك، والحصول على الخدمات الدينية والتقنية في مكان واحد.</p>
+        <a href="https://t.me/za0_bot" class="btn-tg">
+            <i class="fab fa-telegram-plane"></i> ابدأ الآن مجاناً
+        </a>
+    </header>
+
+    <div class="stats">
+        <div class="stat-item">
+            <h2 id="userCount">0</h2>
+            <p>مستخدم نشط</p>
+        </div>
+        <div class="stat-item">
+            <h2>17+</h2>
+            <p>خدمة ذكية مطلوبة</p>
+        </div>
+        <div class="stat-item">
+            <h2>24/7</h2>
+            <p>وقت التشغيل</p>
+        </div>
+    </div>
+
+    <section class="features">
+        <div class="feature-card" data-aos>
+            <i class="fas fa-book-open"></i>
+            <h3>نظام الاذكار والتسبيح</h3>
+            <p>يحتوي نظام الاذكار و التسبيح على بعض الازرار المهمة</p>
+            <p>1. زر 100 الصلاة على محمد و آل محمد</p>
+            <p>2. زر تسبيح فاطمة الزهراء عليها السلام</p>
+            <p>3. زر اذكار الصباح</p>
+            <p>4. زر اذكار المساء</p>
+            <p>5. زر ذكر عشوائي</p>
+            <p>6. زر التسبيح اللانهائي</p>
+        </div>
+        <div class="feature-card" data-aos>
+            <i class="fas fa-quran"></i>
+            <h3>نظام القرآن الكريم</h3>
+            <p>عبارة عن صفح صفحات القرآن الكريم بطريقة سهلة و ذكية مع خدمة فهرس السور و البحث عن اسم السورة او رقم الصفحة.</p>
+            <p>يحتوي على ميزة حفظ آخر صفحة تمت قرآتها لكل مستخدم.</p>
+        </div>
+        <div class="feature-card" data-aos>
+            <i class="fas fa-user-clock"></i>
+            <h3>نظام احسب عمرك</h3>
+            <p>يحسب العمر بالسنوات والأشهر والأيام مع تفصيل دقيق للساعات والدقائق الكلية بناءً على توقيت بغداد المحلي.</p>
+        </div>
+        <div class="feature-card" data-aos>
+            <i contenteditable="fa fa-"></i>
+            <h3></h3>
+            <p></p>
+        </div>
+    </section>
+
+    <footer>
+        <p>تم التطوير بكل ❤️ بواسطة <a href="https://t.me/altaee_z" class="dev-link">علي الطائي</a></p>
+        <p style="margin-top: 10px; font-size: 0.8rem; color: #666;">&copy; 2026 جميع الحقوق محفوظة</p>
+    </footer>
+
+    <script>
+        // أنيميشن بسيط عند التمرير
+        const observerOptions = {
+            threshold: 0.1
+        };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('aos-animate');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('[data-aos]').forEach(el => observer.observe(el));
+
+        // عداد المستخدمين (تأثير بصري)
+        let count = 0;
+        const target = 100; // يمكنك تغيير هذا الرقم
+        const timer = setInterval(() => {
+            count += Math.ceil(target / 50);
+            if (count >= target) {
+                count = target;
+                clearInterval(timer);
+            }
+            document.getElementById('userCount').innerText = count + "+";
+        }, 30);
+    </script>
+</body>
+
+</html>
