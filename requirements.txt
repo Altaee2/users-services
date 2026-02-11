@@ -1,5 +1,4 @@
 Pillow
-config
 gdshortener
 hijri_converter
 pytz
