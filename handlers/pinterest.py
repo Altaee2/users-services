@@ -71,8 +71,8 @@ def pinterest_handler(bot):
                     f"📦 <b>الحجم:</b> <code>{size_mb} MB</code>\n"
                     f"📌 <b>المصدر:</b> <code>Pinterest</code>\n"
                     f"━""\n"
-                f"<b>🤍 مطور البوت: @altaee_z</b>\n"
-               f"📦 إصدار البوت: <a href='http://www.services-bot.free.nf'><b>V2.5.0</b></a>"
+                f"<b>🤍 رابط البوت: @z0a_bot</b>\n"
+               f"📦 إصدار البوت: <a href='http://www.services-bot.free.nf'><b>V2.6.0</b></a>"
                 )
                 
                 bot.send_video(message.chat.id, v_url, caption=caption, parse_mode="HTML")
