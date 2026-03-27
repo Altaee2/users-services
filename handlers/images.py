@@ -9,7 +9,6 @@ from fpdf import FPDF
 import qrcode
 import barcode
 from barcode.writer import ImageWriter
-import numpy as np
 from pyzbar.pyzbar import decode
 # 🔑 مفتاح remove.bg
 REMOVE_BG_KEY = "PawTQh5RB1AQiqeiW2sS5kpy"
