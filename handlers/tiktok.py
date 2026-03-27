@@ -79,8 +79,8 @@ def tiktok_handler(bot):
                     f"✅ <b>تم تحميل الفيديو</b>\n"
                     f"📦 الحجم: <b>{size}</b>\n\n"
                     f"━""\n"
-                f"<b>🤍 مطور البوت: @altaee_z</b>\n"
-               f"📦 إصدار البوت: <a href='http://www.services-bot.free.nf'><b>V2.5.0</b></a>"
+                f"<b>🤍 رابط البوت: @z0a_bot</b>\n"
+               f"📦 إصدار البوت: <a href='http://www.services-bot.free.nf'><b>V2.6.0</b></a>"
                 )
 
                 bot.send_video(
