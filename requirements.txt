@@ -5,9 +5,7 @@ pytz
 requests
 pyTelegramBotAPI
 yt_dlp
-opencv-python
 pyzbar
-numpy
 fpdf2
 qrcode
 python-barcode
