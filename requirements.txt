@@ -9,3 +9,4 @@ opencv-python
 pyzbar
 numpy
 fpdf2
+qrcode
