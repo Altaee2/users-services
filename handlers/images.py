@@ -2,11 +2,20 @@ import requests
 from io import BytesIO
 from telebot import types
 from PIL import Image, ImageOps, ImageEnhance
-
+import os
+import json
+from datetime import datetime
+from fpdf import FPDF
+import qrcode
+import barcode
+from barcode.writer import ImageWriter
+import cv2
+import numpy as np
+from pyzbar.pyzbar import decode
 # 🔑 مفتاح remove.bg
 REMOVE_BG_KEY = "PawTQh5RB1AQiqeiW2sS5kpy"
-
-
+pdf_temp_storage = {}
+qr_storage = {}
 def images_handler(bot, user_states):
 
     # ━━━━━━━━━━━━━━━━━━━
@@ -20,6 +29,7 @@ def images_handler(bot, user_states):
             types.InlineKeyboardButton("🪄 توضيح الصورة", callback_data="mode_enhance"),
             types.InlineKeyboardButton("🎭 تحويل لملصق", callback_data="mode_sticker"),
             types.InlineKeyboardButton("🏁 أبيض وأسود", callback_data="mode_bw"),
+            types.InlineKeyboardButton("🎨 فلتر الرسم (سكتش)", callback_data="mode_sketch"),
             types.InlineKeyboardButton("استخراج رابط الصورة", callback_data="mode_link"),
             types.InlineKeyboardButton("🖼️ تحويل إلى ICO", callback_data='mode_conv_ico'),
             types.InlineKeyboardButton("🔄 تحويل إلى PNG", callback_data='mode_conv_png'),
@@ -29,6 +39,8 @@ def images_handler(bot, user_states):
             types.InlineKeyboardButton("📏 تغيير الحجم يدوياً", callback_data='mode_resize'),
             types.InlineKeyboardButton("🎨 استخراج الألوان", callback_data='mode_colors'),
             types.InlineKeyboardButton("📄 تحويل لـ PDF", callback_data='mode_pdf'),
+            types.InlineKeyboardButton("🔳 صانع QR/Barcode", callback_data='mode_qr_gen'),
+            types.InlineKeyboardButton("🔍 قارئ QR/باركود", callback_data="mode_read_qr"),
             types.InlineKeyboardButton("🔙 رجوع", callback_data="main_start")
         )
 
@@ -53,6 +65,8 @@ def images_handler(bot, user_states):
         user_id = call.from_user.id
         mode = call.data.replace("mode_", "")
         user_states[user_id] = mode
+        if mode == "pdf":
+            pdf_temp_storage[user_id] = []
 
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("🔙 إلغاء", callback_data="show_menu"))
@@ -71,6 +85,10 @@ def images_handler(bot, user_states):
             "resize": "📏 وضع تغيير الحجم مفعل\n\nأرسل الصورة أولاً، ثم سأطلب منك الأبعاد الجديدة.",
             "colors": "🎨 وضع استخراج الألوان مفعل\n\nأرسل الصورة وسأقوم بتحليل الألوان الموجودة فيها.",
             "pdf": "📄 وضع التحويل لـ PDF مفعل\nأرسل الصورة وسأحولها لملف مستند جاهز.",
+            "qr_gen": "🔳 <b>وضع صانع الرموز مفعل</b>\n\nأرسل الآن النص أو الرابط الذي تريد تحويله:",
+            "read_qr": "🔍 أرسل الآن صورة تحتوي على QR أو باركود لقراءتها.",
+            "sketch": "🎨 أرسل الصورة لتحويلها إلى رسم احترافي بقلم الرصاص.",
+
 
         }
 
@@ -89,9 +107,25 @@ def images_handler(bot, user_states):
     def handle_image(message):
         user_id = message.from_user.id
         mode = user_states.get(user_id)
+        if not mode:return
+        # --- معالجة الـ PDF ---
+        if mode == "pdf":
+            file_info = bot.get_file(message.photo[-1].file_id)
+            downloaded_file = bot.download_file(file_info.file_path)
+            
+            path = f"temp_{user_id}_{len(pdf_temp_storage.get(user_id, []))}.jpg"
+            with open(path, 'wb') as f:
+                f.write(downloaded_file)
+            
+            if user_id not in pdf_temp_storage: pdf_temp_storage[user_id] = []
+            pdf_temp_storage[user_id].append(path)
 
-        if not mode:
-            return
+            markup = types.InlineKeyboardMarkup()
+            markup.add(types.InlineKeyboardButton("✅ هاهية، صنع الملف", callback_data="get_pdf_name"))
+            markup.add(types.InlineKeyboardButton("❌ إلغاء", callback_data="show_menu"))
+
+            bot.reply_to(message, f"📥 استلمت الصورة رقم {len(pdf_temp_storage[user_id])}\nأرسل المزيد أو اضغط صنع الملف:", reply_markup=markup)
+            return        
 
         status = bot.reply_to(
             message,
@@ -168,13 +202,7 @@ def images_handler(bot, user_states):
                     response_msg,
                     parse_mode="HTML"
                 )
-            elif mode == 'pdf':
-                img = Image.open(BytesIO(downloaded_file)).convert("RGB")
-                output = BytesIO()
-                output.name = "@Z0A_BOT.pdf"
-                img.save(output, format='PDF')
-                output.seek(0)
-                bot.send_document(message.chat.id, output, caption="<b>✅ تم تحويل الصورة إلى PDF بنجاح</b>", parse_mode="HTML")
+            
 
             
             elif mode == "crop":
@@ -282,6 +310,57 @@ def images_handler(bot, user_states):
                     caption="<b>✅ تم تحويل الصورة إلى JPG بنجاح</b>",
                     parse_mode="HTML"
                 )
+            # --- 🎨 5. فلتر الرسم (Sketch) ---
+            elif mode == "sketch":
+                # تحويل الملف إلى مصفوفة OpenCV
+                nparr = np.frombuffer(downloaded_file, np.uint8)
+                img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                
+                # تحويل للرمادي ثم عكس الألوان وتمويه (Blur)
+                grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                invert_img = cv2.bitwise_not(grey_img)
+                blur_img = cv2.GaussianBlur(invert_img, (21, 21), 0)
+                inverted_blur = cv2.bitwise_not(blur_img)
+                sketch_img = cv2.divide(grey_img, inverted_blur, scale=256.0)
+                
+                # حفظ النتيجة في الذاكرة
+                _, buffer = cv2.imencode('.jpg', sketch_img)
+                output = BytesIO(buffer)
+                output.name = "sketch.jpg"
+                
+                bot.send_photo(message.chat.id, output, caption="<b>🎨 تم تحويل الصورة إلى رسم بقلم الرصاص</b>", parse_mode="HTML")
+                bot.delete_message(message.chat.id, status.message_id)
+
+            # --- 🔍 6. قارئ QR/باركود (يدعم العربي) ---
+            elif mode == "read_qr":
+                img = Image.open(BytesIO(downloaded_file))
+                decoded_objects = decode(img)
+                
+                if not decoded_objects:
+                    bot.edit_message_text("❌ لم أجد أي رمز (QR/Barcode) في هذه الصورة.", message.chat.id, status.message_id)
+                else:
+                    results = ""
+                    for obj in decoded_objects:
+                        try:
+                            # محاولة فك التشفير بـ utf-8 لدعم العربية
+                            data_decoded = obj.data.decode('utf-8')
+                        except UnicodeDecodeError:
+                            # إذا فشل، نجرب الترميز العام (latin-1) أو إظهاره كخام
+                            data_decoded = obj.data.decode('windows-1256', errors='replace')
+                        
+                        results += f"📝 <b>النوع:</b> <code>{obj.type}</code>\n"
+                        results += f"🔗 <b>المحتوى:</b>\n<code>{data_decoded}</code>\n\n"
+                    
+                    # إرسال النتيجة النهائية
+                    bot.edit_message_text(
+                        f"✅ <b>تم استخراج البيانات بنجاح:</b>\n\n{results}", 
+                        message.chat.id, 
+                        status.message_id, 
+                        parse_mode="HTML"
+                    )
+                # تنظيف الحالة بعد الانتهاء
+                user_states.pop(user_id, None)
+                return
             # ── ملصق ──
             elif mode == "sticker":
                 sticker = BytesIO(downloaded_file)
@@ -290,6 +369,7 @@ def images_handler(bot, user_states):
 
             bot.delete_message(message.chat.id, status.message_id)
             user_states.pop(user_id, None)
+            
 
         except Exception as e:
             print(e)
@@ -298,6 +378,7 @@ def images_handler(bot, user_states):
                 message.chat.id,
                 status.message_id
             )
+            
     @bot.message_handler(func=lambda message: isinstance(user_states.get(message.from_user.id), dict) and user_states.get(message.from_user.id).get('action') == 'waiting_name')
     def process_rename(message):
         user_id = message.from_user.id
@@ -421,4 +502,138 @@ def images_handler(bot, user_states):
             # مسح الحالة
             user_states.pop(user_id, None)
         
+    @bot.callback_query_handler(func=lambda c: c.data == "get_pdf_name")
+    def get_pdf_name(call):
+        user_id = call.from_user.id
+        user_states[user_id] = "waiting_pdf_name"
+        bot.edit_message_text("📝 <b>تمام، هسة أرسل اسم الملف اللي تريده:</b>", call.message.chat.id, call.message.message_id, parse_mode="HTML")
+
+    # ━━━━━━━━━━━━━━━━━━━
+    # 📄 صنع ملف الـ PDF النهائي
+    # ━━━━━━━━━━━━━━━━━━━
+    @bot.message_handler(func=lambda m: user_states.get(m.from_user.id) == "waiting_pdf_name")
+    def finalize_pdf(message):
+        user_id = message.from_user.id
+        images = pdf_temp_storage.get(user_id, [])
+        raw_name = "".join(x for x in message.text if x.isalnum() or x in " -_").strip()
+        file_name = f"{raw_name}.pdf" if raw_name else f"File_{user_id}.pdf"
+
+        if not images:
+            bot.reply_to(message, "❌ ماكو صور بالذاكرة!")
+            return
+
+        wait = bot.reply_to(message, "⏳ <b>جاري إنشاء الملف وتنسيق الصور...</b>", parse_mode="HTML")
+
+        try:
+            pdf = FPDF(unit="mm", format="A4")
+            for img_path in images:
+                with Image.open(img_path) as img:
+                    w, h = img.size
+                    ratio = min(210/w, 297/h)
+                    new_w, new_h = w * ratio, h * ratio
+                    x, y = (210 - new_w) / 2, (297 - new_h) / 2
+                    pdf.add_page()
+                    pdf.image(img_path, x=x, y=y, w=new_w, h=new_h)
+            
+            pdf.output(file_name)
+            
+            # --- معلومات الملف ---
+            file_size = os.path.getsize(file_name) // 1024
+            current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+            
+            caption = (
+                f"✨ <b>تم تحويل ملفك بنجاح</b>\n\n"
+                f"📄 اسم الملف: <code>{file_name}</code>\n"
+                f"🔢 عدد الصفحات: {len(images)}\n"
+                f"⚖️ حجم الملف: {file_size} KB\n"
+                f"🗓 التاريخ: {current_date}\n\n"
+                f"━━━━━━━━━━━━\n"
+                f"🤍 تلجرام : @altaee_z\n"
+                f"🌐 موقعي : www.ali-Altaee.free.nf"
+            )
+
+            # --- أزرار المشاركة ---
+            markup = types.InlineKeyboardMarkup()
+            markup.add(
+                types.InlineKeyboardButton("🌐 زيارة موقعي", url="http://www.ali-Altaee.free.nf"),
+                types.InlineKeyboardButton("📢 مشاركة البوت", url=f"https://t.me/share/url?url=https://t.me/{bot.get_me().username}")
+            )
+
+            with open(file_name, 'rb') as f:
+                bot.send_document(message.chat.id, f, caption=caption, parse_mode="HTML", reply_markup=markup)
+
+        except Exception as e:
+            bot.reply_to(message, f"❌ حدث خطأ: {e}")
+
+        # تنظيف
+        bot.delete_message(message.chat.id, wait.message_id)
+        for img in images:
+            if os.path.exists(img): os.remove(img)
+        if os.path.exists(file_name): os.remove(file_name)
+        
+        pdf_temp_storage.pop(user_id, None)
+        user_states.pop(user_id, None)
+    @bot.message_handler(func=lambda m: user_states.get(m.from_user.id) == "qr_gen")
+    def handle_qr_text(message):
+        user_id = message.from_user.id
+        qr_storage[user_id] = {'text': message.text}
+        
+        markup = types.InlineKeyboardMarkup()
+        markup.row(types.InlineKeyboardButton("⬛ QR Code (مربع)", callback_data="setqr_qr"),
+                   types.InlineKeyboardButton("📄 Barcode (مستطيل)", callback_data="setqr_bar"))
+        
+        bot.reply_to(message, "🎯 <b>اختر نوع الرمز:</b>", reply_markup=markup, parse_mode="HTML")
+
+    @bot.callback_query_handler(func=lambda c: c.data.startswith("setqr_"))
+    def choose_qr_color(call):
+        user_id = call.from_user.id
+        qr_storage[user_id]['type'] = call.data.replace("setqr_", "")
+        
+        markup = types.InlineKeyboardMarkup(row_width=2)
+        colors = [("أسود 🖤", "black"), ("أزرق 💙", "blue"), ("أحمر ❤️", "red"), ("أخضر 💚", "green")]
+        btns = [types.InlineKeyboardButton(n, callback_data=f"qrc__{v}") for n, v in colors]
+        markup.add(*btns)
+        
+        bot.edit_message_text("🎨 <b>اختر لون الرمز:</b>", call.message.chat.id, call.message.message_id, reply_markup=markup, parse_mode="HTML")
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("qrc__"))
+    def finalize_qr_gen(call):
+        user_id = call.from_user.id
+        color = call.data.replace("qrc__", "")
+        data = qr_storage.get(user_id)
+        if not data: return
+
+        bot.edit_message_text("⏳ جاري التوليد...", call.message.chat.id, call.message.message_id)
+        
+        try:
+            bio = BytesIO()
+            if data['type'] == 'qr':
+                qr = qrcode.QRCode(box_size=10, border=2)
+                qr.add_data(data['text'])
+                qr.make(fit=True)
+                img = qr.make_image(fill_color=color, back_color="white")
+                img.save(bio, 'PNG')
+            else:
+                COD = barcode.get_barcode_class('code128')
+                bar = COD(data['text'], writer=ImageWriter())
+                bar.write(bio, options={"foreground": color, "background": "white", "write_text": True})
+
+            bio.seek(0)
+            
+            caption = (
+                f"✅ <b>تم توليد الرمز بنجاح</b>\n\n"
+                f"🤍 تلجرام : @altaee_z\n"
+                f"🌐 موقعي : www.ali-Altaee.free.nf"
+            )
+            
+            markup = types.InlineKeyboardMarkup()
+            markup.add(types.InlineKeyboardButton("📢 مشاركة البوت", url=f"https://t.me/share/url?url=https://t.me/{bot.get_me().username}"))
+            
+            bot.send_photo(call.message.chat.id, bio, caption=caption, parse_mode="HTML", reply_markup=markup)
+            bot.delete_message(call.message.chat.id, call.message.message_id)
+        except Exception as e:
+            bot.send_message(call.message.chat.id, f"❌ خطأ: {e}")
+        
+        user_states.pop(user_id, None)
+        qr_storage.pop(user_id, None)
             
