@@ -9,7 +9,6 @@ from fpdf import FPDF
 import qrcode
 import barcode
 from barcode.writer import ImageWriter
-import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
 # 🔑 مفتاح remove.bg
@@ -29,7 +28,6 @@ def images_handler(bot, user_states):
             types.InlineKeyboardButton("🪄 توضيح الصورة", callback_data="mode_enhance"),
             types.InlineKeyboardButton("🎭 تحويل لملصق", callback_data="mode_sticker"),
             types.InlineKeyboardButton("🏁 أبيض وأسود", callback_data="mode_bw"),
-            types.InlineKeyboardButton("🎨 فلتر الرسم (سكتش)", callback_data="mode_sketch"),
             types.InlineKeyboardButton("استخراج رابط الصورة", callback_data="mode_link"),
             types.InlineKeyboardButton("🖼️ تحويل إلى ICO", callback_data='mode_conv_ico'),
             types.InlineKeyboardButton("🔄 تحويل إلى PNG", callback_data='mode_conv_png'),
@@ -87,7 +85,6 @@ def images_handler(bot, user_states):
             "pdf": "📄 وضع التحويل لـ PDF مفعل\nأرسل الصورة وسأحولها لملف مستند جاهز.",
             "qr_gen": "🔳 <b>وضع صانع الرموز مفعل</b>\n\nأرسل الآن النص أو الرابط الذي تريد تحويله:",
             "read_qr": "🔍 أرسل الآن صورة تحتوي على QR أو باركود لقراءتها.",
-            "sketch": "🎨 أرسل الصورة لتحويلها إلى رسم احترافي بقلم الرصاص.",
 
 
         }
@@ -310,27 +307,7 @@ def images_handler(bot, user_states):
                     caption="<b>✅ تم تحويل الصورة إلى JPG بنجاح</b>",
                     parse_mode="HTML"
                 )
-            # --- 🎨 5. فلتر الرسم (Sketch) ---
-            elif mode == "sketch":
-                # تحويل الملف إلى مصفوفة OpenCV
-                nparr = np.frombuffer(downloaded_file, np.uint8)
-                img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-                
-                # تحويل للرمادي ثم عكس الألوان وتمويه (Blur)
-                grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                invert_img = cv2.bitwise_not(grey_img)
-                blur_img = cv2.GaussianBlur(invert_img, (21, 21), 0)
-                inverted_blur = cv2.bitwise_not(blur_img)
-                sketch_img = cv2.divide(grey_img, inverted_blur, scale=256.0)
-                
-                # حفظ النتيجة في الذاكرة
-                _, buffer = cv2.imencode('.jpg', sketch_img)
-                output = BytesIO(buffer)
-                output.name = "sketch.jpg"
-                
-                bot.send_photo(message.chat.id, output, caption="<b>🎨 تم تحويل الصورة إلى رسم بقلم الرصاص</b>", parse_mode="HTML")
-                bot.delete_message(message.chat.id, status.message_id)
-
+           
             # --- 🔍 6. قارئ QR/باركود (يدعم العربي) ---
             elif mode == "read_qr":
                 img = Image.open(BytesIO(downloaded_file))
