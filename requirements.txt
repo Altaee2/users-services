@@ -5,3 +5,6 @@ pytz
 requests
 pyTelegramBotAPI
 yt_dlp
+opencv-python
+pyzbar
+numpy
