@@ -69,7 +69,7 @@ def instagram_handler(bot):
                 if call.data == "ig_video":
                     bot.send_video(
                         call.message.chat.id, f,
-                        caption="✅ <b>تم تحميل الفيديو بنجاح</b>\n\n🤍 @altaee_z\n حجم التحميل: {size}",
+                        caption="✅ <b>تم تحميل الفيديو بنجاح</b>\n\n🤍 @z0a_bot\n حجم التحميل: {size}",
                         parse_mode="HTML"
                     )
                 else:
