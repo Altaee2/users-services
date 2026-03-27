@@ -10,3 +10,4 @@ pyzbar
 numpy
 fpdf2
 qrcode
+python-barcode
