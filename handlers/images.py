@@ -1,3 +1,4 @@
+from pyzbar.pyzbar import decode
 import requests
 from io import BytesIO
 from telebot import types
@@ -9,7 +10,6 @@ from fpdf import FPDF
 import qrcode
 import barcode
 from barcode.writer import ImageWriter
-from pyzbar.pyzbar import decode
 # 🔑 مفتاح remove.bg
 REMOVE_BG_KEY = "PawTQh5RB1AQiqeiW2sS5kpy"
 pdf_temp_storage = {}
