@@ -17,7 +17,6 @@ from handlers.gpt import gpt_handler
 from handlers.car import car_handler
 from handlers.todo import todo_handler
 from handlers.tashkeel import tashkeel_handler
-from handlers.qr_gen import qr_generator_handler
 bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
 user_data = {}
@@ -40,6 +39,5 @@ gpt_handler(bot)
 car_handler(bot)
 todo_handler(bot)
 tashkeel_handler(bot)
-qr_generator_handler(bot)
 print("BOT IS STARTING.......................")
 bot.polling(none_stop=True)
