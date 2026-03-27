@@ -8,3 +8,4 @@ yt_dlp
 opencv-python
 pyzbar
 numpy
+fpdf2
