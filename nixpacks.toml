@@ -1,2 +1,2 @@
 [phases.setup]
-nixPkgs = ["zbar", "libxcb", "libX11", "libglvnd", "glib"]
+nixPkgs = ["zbar"]
