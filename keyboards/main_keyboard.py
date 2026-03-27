@@ -19,7 +19,6 @@ def get_start_keyboard():
         types.InlineKeyboardButton("🚗 التعرف على السيارة", callback_data="go_car_check"),
         types.InlineKeyboardButton("📑 تدوين مهام", callback_data="go_todo"),
         types.InlineKeyboardButton("✍🏻 تشكيل الكلمات", callback_data="go_tashkeel"),
-        types.InlineKeyboardButton("📣 تذكيرات ", callback_data="go_reminders")
         
     )
     return k
