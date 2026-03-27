@@ -11,3 +11,4 @@ numpy
 fpdf2
 qrcode
 python-barcode
+opencv-python-headless
