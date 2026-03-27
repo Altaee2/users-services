@@ -1,4 +1,3 @@
-from pyzbar.pyzbar import decode
 import requests
 from io import BytesIO
 from telebot import types
@@ -37,7 +36,6 @@ def images_handler(bot, user_states):
             types.InlineKeyboardButton("🎨 استخراج الألوان", callback_data='mode_colors'),
             types.InlineKeyboardButton("📄 تحويل لـ PDF", callback_data='mode_pdf'),
             types.InlineKeyboardButton("🔳 صانع QR/Barcode", callback_data='mode_qr_gen'),
-            types.InlineKeyboardButton("🔍 قارئ QR/باركود", callback_data="mode_read_qr"),
             types.InlineKeyboardButton("🔙 رجوع", callback_data="main_start")
         )
 
